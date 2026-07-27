@@ -1,96 +1,233 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local VirtualUser = game:GetService("VirtualUser")
 
 local LocalPlayer = Players.LocalPlayer
 
---------------------------------------------------------
--- UI
---------------------------------------------------------
+
+local Theme = {
+	Background = Color3.fromRGB(18,18,24),
+	Card = Color3.fromRGB(32,32,42),
+	Accent = Color3.fromRGB(170,90,255),
+	Text = Color3.fromRGB(255,255,255),
+	SubText = Color3.fromRGB(170,170,180),
+	On = Color3.fromRGB(80,200,120),
+	Off = Color3.fromRGB(210,70,80)
+}
+
+
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "TestExecutor"
+gui.Name = "BobbaTools"
 gui.ResetOnSpawn = false
 gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 
+
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0,220,0,230)
+frame.Name = "Main"
+frame.Size = UDim2.new(0,300,0,300)
 frame.Position = UDim2.new(0.05,0,0.2,0)
-frame.BackgroundColor3 = Color3.fromRGB(35,35,35)
+frame.BackgroundColor3 = Theme.Background
 frame.BorderSizePixel = 0
 frame.Parent = gui
 
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0,8)
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0,16)
+frameCorner.Parent = frame
+
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Theme.Accent
+stroke.Transparency = 0.4
+stroke.Parent = frame
+
+
+
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1,0,0,55)
+header.BackgroundTransparency = 1
+header.Parent = frame
+
 
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1,0,0,30)
+title.Size = UDim2.new(0.7,0,1,0)
+title.Position = UDim2.new(0.05,0,0,0)
 title.BackgroundTransparency = 1
-title.Text = "Bobba"
-title.TextColor3 = Color3.new(1,1,1)
+title.Text = "☕ Bobba"
+title.TextColor3 = Theme.Text
 title.Font = Enum.Font.GothamBold
-title.TextSize = 18
-title.Parent = frame
+title.TextSize = 22
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = header
 
 
---------------------------------------------------------
--- BUTTON CREATOR
---------------------------------------------------------
 
-local function createButton(text, position)
+local minimize = Instance.new("TextButton")
+minimize.Size = UDim2.new(0,35,0,35)
+minimize.Position = UDim2.new(0.82,0,0.18,0)
+minimize.Text = "−"
+minimize.BackgroundColor3 = Theme.Card
+minimize.TextColor3 = Theme.Text
+minimize.Font = Enum.Font.GothamBold
+minimize.TextSize = 18
+minimize.Parent = header
+
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0,10)
+minCorner.Parent = minimize
+
+
+
+local content = Instance.new("Frame")
+content.Size = UDim2.new(1,-30,1,-70)
+content.Position = UDim2.new(0,15,0,60)
+content.BackgroundTransparency = 1
+content.Parent = frame
+
+
+
+local function createButton(text, icon, y)
 
 	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(1,0,0,55)
+	button.Position = UDim2.new(0,0,0,y)
+	button.BackgroundColor3 = Theme.Card
+	button.Text = ""
+	button.Parent = content
 
-	button.Size = UDim2.new(0.9,0,0,40)
-	button.Position = position
-	button.Text = text
-	button.BackgroundColor3 = Color3.fromRGB(170,50,50)
-	button.TextColor3 = Color3.new(1,1,1)
-	button.Font = Enum.Font.GothamBold
-	button.TextSize = 16
-	button.Parent = frame
 
-	Instance.new("UICorner", button).CornerRadius = UDim.new(0,6)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0,12)
+	corner.Parent = button
 
-	return button
+
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0.6,0,1,0)
+	label.Position = UDim2.new(0.05,0,0,0)
+	label.BackgroundTransparency = 1
+	label.Text = icon.." "..text
+	label.TextColor3 = Theme.Text
+	label.Font = Enum.Font.GothamMedium
+	label.TextSize = 15
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = button
+
+
+
+	local toggle = Instance.new("Frame")
+	toggle.Size = UDim2.new(0,60,0,28)
+	toggle.Position = UDim2.new(0.72,0,0.25,0)
+	toggle.BackgroundColor3 = Theme.Off
+	toggle.Parent = button
+
+
+	local toggleCorner = Instance.new("UICorner")
+	toggleCorner.CornerRadius = UDim.new(1,0)
+	toggleCorner.Parent = toggle
+
+
+
+	local circle = Instance.new("Frame")
+	circle.Size = UDim2.new(0,22,0,22)
+	circle.Position = UDim2.new(0,3,0.5,-11)
+	circle.BackgroundColor3 = Color3.fromRGB(255,255,255)
+	circle.Parent = toggle
+
+
+	local circleCorner = Instance.new("UICorner")
+	circleCorner.CornerRadius = UDim.new(1,0)
+	circleCorner.Parent = circle
+
+
+
+	return button,toggle,circle
 
 end
 
 
---------------------------------------------------------
--- BUTTONS
---------------------------------------------------------
 
-local autoPickupButton = createButton(
-	"Auto Pickup : OFF",
-	UDim2.new(0.05,0,0.20,0)
-)
-
-
-local antiIdleButton = createButton(
-	"Anti Idle : OFF",
-	UDim2.new(0.05,0,0.40,0)
-)
-
-
-local mutationESPButton = createButton(
-	"Mutation ESP : OFF",
-	UDim2.new(0.05,0,0.60,0)
-)
+local autoPickupButton,autoToggle,autoCircle =
+	createButton(
+		"Auto Pickup",
+		"⚡",
+		0
+	)
 
 
 
---------------------------------------------------------
--- DRAGGING
---------------------------------------------------------
+local antiIdleButton,antiToggle,antiCircle =
+	createButton(
+		"Anti Idle",
+		"💤",
+		70
+	)
+
+
+
+local mutationESPButton,espToggle,espCircle =
+	createButton(
+		"Mutation ESP",
+		"✨",
+		140
+	)
+
+
+
+local minimized = false
+local fullSize = frame.Size
+
+
+
+minimize.MouseButton1Click:Connect(function()
+
+	minimized = not minimized
+
+
+	if minimized then
+
+		content.Visible = false
+		minimize.Text = "+"
+
+		TweenService:Create(
+			frame,
+			TweenInfo.new(0.2),
+			{
+				Size = UDim2.new(0,300,0,55)
+			}
+		):Play()
+
+	else
+
+		content.Visible = true
+		minimize.Text = "−"
+
+		TweenService:Create(
+			frame,
+			TweenInfo.new(0.2),
+			{
+				Size = fullSize
+			}
+		):Play()
+
+	end
+
+end)
+
+
 
 local dragging = false
 local dragStart
 local startPos
 
 
-frame.InputBegan:Connect(function(input)
+
+header.InputBegan:Connect(function(input)
 
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 
@@ -98,18 +235,22 @@ frame.InputBegan:Connect(function(input)
 		dragStart = input.Position
 		startPos = frame.Position
 
+	end
 
-		input.Changed:Connect(function()
+end)
 
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-			end
 
-		end)
+
+header.InputEnded:Connect(function(input)
+
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+
+		dragging = false
 
 	end
 
 end)
+
 
 
 UserInputService.InputChanged:Connect(function(input)
@@ -128,9 +269,6 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 
 end)
-
-
-
 --------------------------------------------------------
 -- VARIABLES
 --------------------------------------------------------
@@ -141,11 +279,14 @@ local plot = workspace.Plots:WaitForChild(
 
 
 local duplicator = plot.Machines:WaitForChild("Duplicator")
+
 local cratesFolder = duplicator:WaitForChild("CratesFolder")
 
 
 local autoPickupEnabled = false
+
 local antiIdleEnabled = false
+
 local antiIdleInitialized = false
 
 local mutationESPEnabled = false
@@ -183,6 +324,7 @@ local function triggerPrompt(prompt)
 	end)
 
 end
+
 
 
 
@@ -286,22 +428,18 @@ end
 local mutationESP = {}
 
 
---------------------------------------------------------
--- FIND ALL MUTATIONS
---------------------------------------------------------
 
 local function getMutations(crate)
 
 	local mutations = {}
 
+
 	for _,child in ipairs(crate:GetDescendants()) do
 
 
-		-- Mutations are Parts
 		if child:IsA("Part") then
 
 
-			-- Ignore normal crate parts
 			if not child.Name:find("Crates_Cube")
 			and not child.Name:find("Mesh")
 			and child.Name ~= "ProximityPromptPart" then
@@ -327,10 +465,6 @@ local function getMutations(crate)
 end
 
 
-
---------------------------------------------------------
--- FORMAT MUTATION TEXT
---------------------------------------------------------
 
 local function formatMutations(mutations)
 
@@ -364,11 +498,9 @@ local function formatMutations(mutations)
 
 			text = text .. ", "
 
-
 		else
 
 			text = text .. " ]"
-
 
 		end
 
@@ -382,10 +514,6 @@ end
 
 
 
---------------------------------------------------------
--- CREATE ESP
---------------------------------------------------------
-
 local function createMutationESP(crate)
 
 
@@ -394,15 +522,12 @@ local function createMutationESP(crate)
 	end
 
 
-
 	local mutations = getMutations(crate)
-
 
 
 	if #mutations == 0 then
 		return
 	end
-
 
 
 	local part = crate:FindFirstChildWhichIsA(
@@ -411,11 +536,9 @@ local function createMutationESP(crate)
 	)
 
 
-
 	if not part then
 		return
 	end
-
 
 
 
@@ -452,6 +575,7 @@ local function createMutationESP(crate)
 
 
 	local label = Instance.new("TextLabel")
+
 
 	label.Size = UDim2.new(
 		1,
@@ -492,23 +616,11 @@ local function createMutationESP(crate)
 	label.Parent = gui
 
 
-
 	mutationESP[crate] = gui
-
-
-	print(
-		"Mutation ESP:",
-		crate.Name,
-		table.concat(mutations,", ")
-	)
 
 end
 
 
-
---------------------------------------------------------
--- REMOVE ESP
---------------------------------------------------------
 
 local function clearMutationESP()
 
@@ -532,10 +644,6 @@ local function clearMutationESP()
 end
 
 
-
---------------------------------------------------------
--- ESP LOOP
---------------------------------------------------------
 
 local function MutationLoop()
 
@@ -574,9 +682,59 @@ end
 
 
 --------------------------------------------------------
--- BUTTON CONNECTIONS
+-- TOGGLE ANIMATION
 --------------------------------------------------------
 
+local function setToggle(toggle,circle,state)
+
+	if state then
+
+		TweenService:Create(
+			toggle,
+			TweenInfo.new(0.2),
+			{
+				BackgroundColor3 = Color3.fromRGB(50,170,50)
+			}
+		):Play()
+
+
+		TweenService:Create(
+			circle,
+			TweenInfo.new(0.2),
+			{
+				Position = UDim2.new(1,-25,0.5,-11)
+			}
+		):Play()
+
+
+	else
+
+		TweenService:Create(
+			toggle,
+			TweenInfo.new(0.2),
+			{
+				BackgroundColor3 = Color3.fromRGB(170,50,50)
+			}
+		):Play()
+
+
+		TweenService:Create(
+			circle,
+			TweenInfo.new(0.2),
+			{
+				Position = UDim2.new(0,3,0.5,-11)
+			}
+		):Play()
+
+	end
+
+end
+
+
+
+--------------------------------------------------------
+-- BUTTON CONNECTIONS
+--------------------------------------------------------
 
 autoPickupButton.MouseButton1Click:Connect(function()
 
@@ -584,38 +742,22 @@ autoPickupButton.MouseButton1Click:Connect(function()
 	autoPickupEnabled = not autoPickupEnabled
 
 
+	setToggle(
+		autoToggle,
+		autoCircle,
+		autoPickupEnabled
+	)
+
 
 	if autoPickupEnabled then
-
-
-		autoPickupButton.Text = "Auto Pickup : ON"
-
-		autoPickupButton.BackgroundColor3 =
-			Color3.fromRGB(50,170,50)
-
-
 
 		task.spawn(
 			AutoPickup
 		)
 
-
-
-	else
-
-
-		autoPickupButton.Text = "Auto Pickup : OFF"
-
-		autoPickupButton.BackgroundColor3 =
-			Color3.fromRGB(170,50,50)
-
-
-
 	end
 
-
 end)
-
 
 
 
@@ -625,35 +767,20 @@ antiIdleButton.MouseButton1Click:Connect(function()
 	antiIdleEnabled = not antiIdleEnabled
 
 
+	setToggle(
+		antiToggle,
+		antiCircle,
+		antiIdleEnabled
+	)
+
 
 	if antiIdleEnabled then
 
-
 		EnableAntiIdle()
-
-
-		antiIdleButton.Text = "Anti Idle : ON"
-
-		antiIdleButton.BackgroundColor3 =
-			Color3.fromRGB(50,170,50)
-
-
-
-	else
-
-
-		antiIdleButton.Text = "Anti Idle : OFF"
-
-		antiIdleButton.BackgroundColor3 =
-			Color3.fromRGB(170,50,50)
-
-
 
 	end
 
-
 end)
-
 
 
 
@@ -663,15 +790,14 @@ mutationESPButton.MouseButton1Click:Connect(function()
 	mutationESPEnabled = not mutationESPEnabled
 
 
+	setToggle(
+		espToggle,
+		espCircle,
+		mutationESPEnabled
+	)
+
 
 	if mutationESPEnabled then
-
-
-		mutationESPButton.Text = "Mutation ESP : ON"
-
-		mutationESPButton.BackgroundColor3 =
-			Color3.fromRGB(50,170,50)
-
 
 
 		task.spawn(
@@ -679,19 +805,10 @@ mutationESPButton.MouseButton1Click:Connect(function()
 		)
 
 
-
 	else
 
 
-		mutationESPButton.Text = "Mutation ESP : OFF"
-
-		mutationESPButton.BackgroundColor3 =
-			Color3.fromRGB(170,50,50)
-
-
-
 		clearMutationESP()
-
 
 
 	end
