@@ -1,9 +1,12 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local VirtualUser = game:GetService("VirtualUser")
 
 local LocalPlayer = Players.LocalPlayer
 
---// UI
+--------------------------------------------------------
+-- UI
+--------------------------------------------------------
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "TestExecutor"
@@ -11,40 +14,58 @@ gui.ResetOnSpawn = false
 gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0,220,0,120)
+frame.Size = UDim2.new(0,220,0,170)
 frame.Position = UDim2.new(0.05,0,0.2,0)
 frame.BackgroundColor3 = Color3.fromRGB(35,35,35)
 frame.BorderSizePixel = 0
 frame.Parent = gui
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0,8)
-corner.Parent = frame
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,8)
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Duplicator"
+title.Text = "Testing Executor"
 title.TextColor3 = Color3.new(1,1,1)
 title.Font = Enum.Font.GothamBold
 title.TextSize = 18
 title.Parent = frame
 
-local toggle = Instance.new("TextButton")
-toggle.Size = UDim2.new(0.9,0,0,40)
-toggle.Position = UDim2.new(0.05,0,0.45,0)
-toggle.Text = "Auto Pickup : OFF"
-toggle.BackgroundColor3 = Color3.fromRGB(170,50,50)
-toggle.TextColor3 = Color3.new(1,1,1)
-toggle.Font = Enum.Font.GothamBold
-toggle.TextSize = 16
-toggle.Parent = frame
+--------------------------------------------------------
+-- Auto Pickup Button
+--------------------------------------------------------
 
-local corner2 = Instance.new("UICorner")
-corner2.CornerRadius = UDim.new(0,6)
-corner2.Parent = toggle
+local autoPickupButton = Instance.new("TextButton")
+autoPickupButton.Size = UDim2.new(0.9,0,0,40)
+autoPickupButton.Position = UDim2.new(0.05,0,0.30,0)
+autoPickupButton.Text = "Auto Pickup : OFF"
+autoPickupButton.BackgroundColor3 = Color3.fromRGB(170,50,50)
+autoPickupButton.TextColor3 = Color3.new(1,1,1)
+autoPickupButton.Font = Enum.Font.GothamBold
+autoPickupButton.TextSize = 16
+autoPickupButton.Parent = frame
 
---// Dragging
+Instance.new("UICorner", autoPickupButton).CornerRadius = UDim.new(0,6)
+
+--------------------------------------------------------
+-- Anti Idle Button
+--------------------------------------------------------
+
+local antiIdleButton = Instance.new("TextButton")
+antiIdleButton.Size = UDim2.new(0.9,0,0,40)
+antiIdleButton.Position = UDim2.new(0.05,0,0.60,0)
+antiIdleButton.Text = "Anti Idle : OFF"
+antiIdleButton.BackgroundColor3 = Color3.fromRGB(170,50,50)
+antiIdleButton.TextColor3 = Color3.new(1,1,1)
+antiIdleButton.Font = Enum.Font.GothamBold
+antiIdleButton.TextSize = 16
+antiIdleButton.Parent = frame
+
+Instance.new("UICorner", antiIdleButton).CornerRadius = UDim.new(0,6)
+
+--------------------------------------------------------
+-- Dragging
+--------------------------------------------------------
 
 local dragging = false
 local dragStart
@@ -78,13 +99,22 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 --------------------------------------------------------
+-- Variables
+--------------------------------------------------------
 
 local plot = workspace.Plots:WaitForChild(LocalPlayer.Name .. " Plot")
 local duplicator = plot.Machines:WaitForChild("Duplicator")
 local cratesFolder = duplicator:WaitForChild("CratesFolder")
 
-local running = false
+local autoPickupEnabled = false
+local antiIdleEnabled = false
+local antiIdleInitialized = false
+
 local cooldown = {}
+
+--------------------------------------------------------
+-- Auto Pickup
+--------------------------------------------------------
 
 local function triggerPrompt(prompt)
 
@@ -106,12 +136,12 @@ end
 
 local function AutoPickup()
 
-	while running do
+	while autoPickupEnabled do
 
 		for _,obj in ipairs(cratesFolder:GetDescendants()) do
 
 			if obj:IsA("ProximityPrompt")
-			and obj.ActionText == "Pickup" then
+				and obj.ActionText == "Pickup" then
 
 				triggerPrompt(obj)
 
@@ -125,21 +155,88 @@ local function AutoPickup()
 
 end
 
-toggle.MouseButton1Click:Connect(function()
+--------------------------------------------------------
+-- Anti Idle
+--------------------------------------------------------
 
-	running = not running
+local function EnableAntiIdle()
 
-	if running then
+	if antiIdleInitialized then
+		return
+	end
 
-		toggle.Text = "Auto Pickup : ON"
-		toggle.BackgroundColor3 = Color3.fromRGB(50,170,50)
+	antiIdleInitialized = true
+
+	if getconnections then
+
+		for _,connection in pairs(getconnections(LocalPlayer.Idled)) do
+
+			if connection.Disable then
+				connection:Disable()
+
+			elseif connection.Disconnect then
+				connection:Disconnect()
+
+			end
+
+		end
+
+	else
+
+		LocalPlayer.Idled:Connect(function()
+
+			if antiIdleEnabled then
+
+				VirtualUser:CaptureController()
+				VirtualUser:ClickButton2(Vector2.new())
+
+			end
+
+		end)
+
+	end
+
+end
+
+--------------------------------------------------------
+-- Button Connections
+--------------------------------------------------------
+
+autoPickupButton.MouseButton1Click:Connect(function()
+
+	autoPickupEnabled = not autoPickupEnabled
+
+	if autoPickupEnabled then
+
+		autoPickupButton.Text = "Auto Pickup : ON"
+		autoPickupButton.BackgroundColor3 = Color3.fromRGB(50,170,50)
 
 		task.spawn(AutoPickup)
 
 	else
 
-		toggle.Text = "Auto Pickup : OFF"
-		toggle.BackgroundColor3 = Color3.fromRGB(170,50,50)
+		autoPickupButton.Text = "Auto Pickup : OFF"
+		autoPickupButton.BackgroundColor3 = Color3.fromRGB(170,50,50)
+
+	end
+
+end)
+
+antiIdleButton.MouseButton1Click:Connect(function()
+
+	antiIdleEnabled = not antiIdleEnabled
+
+	if antiIdleEnabled then
+
+		EnableAntiIdle()
+
+		antiIdleButton.Text = "Anti Idle : ON"
+		antiIdleButton.BackgroundColor3 = Color3.fromRGB(50,170,50)
+
+	else
+
+		antiIdleButton.Text = "Anti Idle : OFF"
+		antiIdleButton.BackgroundColor3 = Color3.fromRGB(170,50,50)
 
 	end
 
