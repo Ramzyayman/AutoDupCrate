@@ -1,0 +1,146 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+
+--// UI
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "TestExecutor"
+gui.ResetOnSpawn = false
+gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0,220,0,120)
+frame.Position = UDim2.new(0.05,0,0.2,0)
+frame.BackgroundColor3 = Color3.fromRGB(35,35,35)
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0,8)
+corner.Parent = frame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,30)
+title.BackgroundTransparency = 1
+title.Text = "Testing Executor"
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.Parent = frame
+
+local toggle = Instance.new("TextButton")
+toggle.Size = UDim2.new(0.9,0,0,40)
+toggle.Position = UDim2.new(0.05,0,0.45,0)
+toggle.Text = "Auto Pickup : OFF"
+toggle.BackgroundColor3 = Color3.fromRGB(170,50,50)
+toggle.TextColor3 = Color3.new(1,1,1)
+toggle.Font = Enum.Font.GothamBold
+toggle.TextSize = 16
+toggle.Parent = frame
+
+local corner2 = Instance.new("UICorner")
+corner2.CornerRadius = UDim.new(0,6)
+corner2.Parent = toggle
+
+--// Dragging
+
+local dragging = false
+local dragStart
+local startPos
+
+frame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+
+		frame.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+--------------------------------------------------------
+
+local plot = workspace.Plots:WaitForChild(LocalPlayer.Name .. " Plot")
+local duplicator = plot.Machines:WaitForChild("Duplicator")
+local cratesFolder = duplicator:WaitForChild("CratesFolder")
+
+local running = false
+local cooldown = {}
+
+local function triggerPrompt(prompt)
+
+	if cooldown[prompt] then
+		return
+	end
+
+	cooldown[prompt] = true
+
+	prompt:InputHoldBegin()
+	task.wait(0.15)
+	prompt:InputHoldEnd()
+
+	task.delay(1,function()
+		cooldown[prompt] = nil
+	end)
+
+end
+
+local function AutoPickup()
+
+	while running do
+
+		for _,obj in ipairs(cratesFolder:GetDescendants()) do
+
+			if obj:IsA("ProximityPrompt")
+			and obj.ActionText == "Pickup" then
+
+				triggerPrompt(obj)
+
+			end
+
+		end
+
+		task.wait(0.1)
+
+	end
+
+end
+
+toggle.MouseButton1Click:Connect(function()
+
+	running = not running
+
+	if running then
+
+		toggle.Text = "Auto Pickup : ON"
+		toggle.BackgroundColor3 = Color3.fromRGB(50,170,50)
+
+		task.spawn(AutoPickup)
+
+	else
+
+		toggle.Text = "Auto Pickup : OFF"
+		toggle.BackgroundColor3 = Color3.fromRGB(170,50,50)
+
+	end
+
+end)
