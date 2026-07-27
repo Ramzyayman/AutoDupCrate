@@ -13,14 +13,16 @@ gui.Name = "TestExecutor"
 gui.ResetOnSpawn = false
 gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
+
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0,220,0,170)
+frame.Size = UDim2.new(0,220,0,230)
 frame.Position = UDim2.new(0.05,0,0.2,0)
 frame.BackgroundColor3 = Color3.fromRGB(35,35,35)
 frame.BorderSizePixel = 0
 frame.Parent = gui
 
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0,8)
+
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
@@ -31,62 +33,89 @@ title.Font = Enum.Font.GothamBold
 title.TextSize = 18
 title.Parent = frame
 
---------------------------------------------------------
--- Auto Pickup Button
---------------------------------------------------------
-
-local autoPickupButton = Instance.new("TextButton")
-autoPickupButton.Size = UDim2.new(0.9,0,0,40)
-autoPickupButton.Position = UDim2.new(0.05,0,0.30,0)
-autoPickupButton.Text = "Auto Pickup : OFF"
-autoPickupButton.BackgroundColor3 = Color3.fromRGB(170,50,50)
-autoPickupButton.TextColor3 = Color3.new(1,1,1)
-autoPickupButton.Font = Enum.Font.GothamBold
-autoPickupButton.TextSize = 16
-autoPickupButton.Parent = frame
-
-Instance.new("UICorner", autoPickupButton).CornerRadius = UDim.new(0,6)
 
 --------------------------------------------------------
--- Anti Idle Button
+-- BUTTON CREATOR
 --------------------------------------------------------
 
-local antiIdleButton = Instance.new("TextButton")
-antiIdleButton.Size = UDim2.new(0.9,0,0,40)
-antiIdleButton.Position = UDim2.new(0.05,0,0.60,0)
-antiIdleButton.Text = "Anti Idle : OFF"
-antiIdleButton.BackgroundColor3 = Color3.fromRGB(170,50,50)
-antiIdleButton.TextColor3 = Color3.new(1,1,1)
-antiIdleButton.Font = Enum.Font.GothamBold
-antiIdleButton.TextSize = 16
-antiIdleButton.Parent = frame
+local function createButton(text, position)
 
-Instance.new("UICorner", antiIdleButton).CornerRadius = UDim.new(0,6)
+	local button = Instance.new("TextButton")
+
+	button.Size = UDim2.new(0.9,0,0,40)
+	button.Position = position
+	button.Text = text
+	button.BackgroundColor3 = Color3.fromRGB(170,50,50)
+	button.TextColor3 = Color3.new(1,1,1)
+	button.Font = Enum.Font.GothamBold
+	button.TextSize = 16
+	button.Parent = frame
+
+	Instance.new("UICorner", button).CornerRadius = UDim.new(0,6)
+
+	return button
+
+end
+
 
 --------------------------------------------------------
--- Dragging
+-- BUTTONS
+--------------------------------------------------------
+
+local autoPickupButton = createButton(
+	"Auto Pickup : OFF",
+	UDim2.new(0.05,0,0.20,0)
+)
+
+
+local antiIdleButton = createButton(
+	"Anti Idle : OFF",
+	UDim2.new(0.05,0,0.40,0)
+)
+
+
+local mutationESPButton = createButton(
+	"Mutation ESP : OFF",
+	UDim2.new(0.05,0,0.60,0)
+)
+
+
+
+--------------------------------------------------------
+-- DRAGGING
 --------------------------------------------------------
 
 local dragging = false
 local dragStart
 local startPos
 
+
 frame.InputBegan:Connect(function(input)
+
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+
 		dragging = true
 		dragStart = input.Position
 		startPos = frame.Position
 
+
 		input.Changed:Connect(function()
+
 			if input.UserInputState == Enum.UserInputState.End then
 				dragging = false
 			end
+
 		end)
+
 	end
+
 end)
 
+
 UserInputService.InputChanged:Connect(function(input)
+
 	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+
 		local delta = input.Position - dragStart
 
 		frame.Position = UDim2.new(
@@ -95,25 +124,39 @@ UserInputService.InputChanged:Connect(function(input)
 			startPos.Y.Scale,
 			startPos.Y.Offset + delta.Y
 		)
+
 	end
+
 end)
 
+
+
 --------------------------------------------------------
--- Variables
+-- VARIABLES
 --------------------------------------------------------
 
-local plot = workspace.Plots:WaitForChild(LocalPlayer.Name .. " Plot")
+local plot = workspace.Plots:WaitForChild(
+	LocalPlayer.Name .. " Plot"
+)
+
+
 local duplicator = plot.Machines:WaitForChild("Duplicator")
 local cratesFolder = duplicator:WaitForChild("CratesFolder")
+
 
 local autoPickupEnabled = false
 local antiIdleEnabled = false
 local antiIdleInitialized = false
 
+local mutationESPEnabled = false
+
+
 local cooldown = {}
 
+
+
 --------------------------------------------------------
--- Auto Pickup
+-- AUTO PICKUP
 --------------------------------------------------------
 
 local function triggerPrompt(prompt)
@@ -122,32 +165,47 @@ local function triggerPrompt(prompt)
 		return
 	end
 
+
 	cooldown[prompt] = true
 
+
 	prompt:InputHoldBegin()
+
 	task.wait(0.15)
+
 	prompt:InputHoldEnd()
 
+
 	task.delay(1,function()
+
 		cooldown[prompt] = nil
+
 	end)
 
 end
+
+
 
 local function AutoPickup()
 
 	while autoPickupEnabled do
 
+
 		for _,obj in ipairs(cratesFolder:GetDescendants()) do
 
+
 			if obj:IsA("ProximityPrompt")
-				and obj.ActionText == "Pickup" then
+			and obj.ActionText == "Pickup" then
+
 
 				triggerPrompt(obj)
 
+
 			end
 
+
 		end
+
 
 		task.wait(0.1)
 
@@ -155,89 +213,488 @@ local function AutoPickup()
 
 end
 
+
+
 --------------------------------------------------------
--- Anti Idle
+-- ANTI IDLE
 --------------------------------------------------------
 
 local function EnableAntiIdle()
+
 
 	if antiIdleInitialized then
 		return
 	end
 
+
 	antiIdleInitialized = true
+
+
 
 	if getconnections then
 
+
 		for _,connection in pairs(getconnections(LocalPlayer.Idled)) do
 
+
 			if connection.Disable then
+
 				connection:Disable()
 
+
 			elseif connection.Disconnect then
+
 				connection:Disconnect()
 
 			end
 
+
 		end
 
+
+
 	else
+
 
 		LocalPlayer.Idled:Connect(function()
 
+
 			if antiIdleEnabled then
 
+
 				VirtualUser:CaptureController()
-				VirtualUser:ClickButton2(Vector2.new())
+
+				VirtualUser:ClickButton2(
+					Vector2.new()
+				)
+
 
 			end
 
+
 		end)
 
+
 	end
+
+
+end
+--------------------------------------------------------
+-- MUTATION ESP
+--------------------------------------------------------
+
+local mutationESP = {}
+
+
+--------------------------------------------------------
+-- FIND ALL MUTATIONS
+--------------------------------------------------------
+
+local function getMutations(crate)
+
+	local mutations = {}
+
+	for _,child in ipairs(crate:GetDescendants()) do
+
+
+		-- Mutations are Parts
+		if child:IsA("Part") then
+
+
+			-- Ignore normal crate parts
+			if not child.Name:find("Crates_Cube")
+			and not child.Name:find("Mesh")
+			and child.Name ~= "ProximityPromptPart" then
+
+
+				table.insert(
+					mutations,
+					child.Name
+				)
+
+
+			end
+
+
+		end
+
+
+	end
+
+
+	return mutations
 
 end
 
+
+
 --------------------------------------------------------
--- Button Connections
+-- FORMAT MUTATION TEXT
 --------------------------------------------------------
+
+local function formatMutations(mutations)
+
+
+	local text = ""
+
+	local perLine = 5
+
+
+	for i,name in ipairs(mutations) do
+
+
+		if (i - 1) % perLine == 0 then
+
+			text = text .. "\n[ "
+
+		end
+
+
+
+		text = text .. name
+
+
+
+		if i % perLine == 0 then
+
+			text = text .. " ]"
+
+
+		elseif i < #mutations then
+
+			text = text .. ", "
+
+
+		else
+
+			text = text .. " ]"
+
+
+		end
+
+
+	end
+
+
+	return text
+
+end
+
+
+
+--------------------------------------------------------
+-- CREATE ESP
+--------------------------------------------------------
+
+local function createMutationESP(crate)
+
+
+	if mutationESP[crate] then
+		return
+	end
+
+
+
+	local mutations = getMutations(crate)
+
+
+
+	if #mutations == 0 then
+		return
+	end
+
+
+
+	local part = crate:FindFirstChildWhichIsA(
+		"BasePart",
+		true
+	)
+
+
+
+	if not part then
+		return
+	end
+
+
+
+
+	local lines = math.ceil(
+		#mutations / 5
+	)
+
+
+
+	local gui = Instance.new("BillboardGui")
+
+	gui.Name = "MutationESP"
+
+	gui.Adornee = part
+
+	gui.AlwaysOnTop = true
+
+	gui.Size = UDim2.new(
+		0,
+		350,
+		0,
+		50 + (lines * 25)
+	)
+
+	gui.StudsOffset = Vector3.new(
+		0,
+		4,
+		0
+	)
+
+	gui.Parent = part
+
+
+
+
+	local label = Instance.new("TextLabel")
+
+	label.Size = UDim2.new(
+		1,
+		0,
+		1,
+		0
+	)
+
+
+	label.BackgroundTransparency = 1
+
+
+	label.TextColor3 = Color3.new(
+		1,
+		1,
+		1
+	)
+
+
+	label.TextStrokeTransparency = 0
+
+
+	label.Font = Enum.Font.GothamBold
+
+
+	label.TextSize = 14
+
+
+	label.TextWrapped = true
+
+
+	label.Text =
+		"[ "..crate.Name.." Crate ]" ..
+		formatMutations(mutations)
+
+
+
+	label.Parent = gui
+
+
+
+	mutationESP[crate] = gui
+
+
+	print(
+		"Mutation ESP:",
+		crate.Name,
+		table.concat(mutations,", ")
+	)
+
+end
+
+
+
+--------------------------------------------------------
+-- REMOVE ESP
+--------------------------------------------------------
+
+local function clearMutationESP()
+
+
+	for crate,gui in pairs(mutationESP) do
+
+
+		if gui then
+
+			gui:Destroy()
+
+		end
+
+
+		mutationESP[crate] = nil
+
+
+	end
+
+
+end
+
+
+
+--------------------------------------------------------
+-- ESP LOOP
+--------------------------------------------------------
+
+local function MutationLoop()
+
+
+	while mutationESPEnabled do
+
+
+		for _,obj in ipairs(plot.Machines:GetDescendants()) do
+
+
+			if obj:IsA("Model")
+			and obj.Parent
+			and obj.Parent.Name == "CratesFolder" then
+
+
+				createMutationESP(obj)
+
+
+			end
+
+
+		end
+
+
+		task.wait(1)
+
+
+	end
+
+
+
+	clearMutationESP()
+
+end
+
+
+
+--------------------------------------------------------
+-- BUTTON CONNECTIONS
+--------------------------------------------------------
+
 
 autoPickupButton.MouseButton1Click:Connect(function()
 
+
 	autoPickupEnabled = not autoPickupEnabled
+
+
 
 	if autoPickupEnabled then
 
-		autoPickupButton.Text = "Auto Pickup : ON"
-		autoPickupButton.BackgroundColor3 = Color3.fromRGB(50,170,50)
 
-		task.spawn(AutoPickup)
+		autoPickupButton.Text = "Auto Pickup : ON"
+
+		autoPickupButton.BackgroundColor3 =
+			Color3.fromRGB(50,170,50)
+
+
+
+		task.spawn(
+			AutoPickup
+		)
+
+
 
 	else
 
+
 		autoPickupButton.Text = "Auto Pickup : OFF"
-		autoPickupButton.BackgroundColor3 = Color3.fromRGB(170,50,50)
+
+		autoPickupButton.BackgroundColor3 =
+			Color3.fromRGB(170,50,50)
+
+
 
 	end
+
 
 end)
 
+
+
+
 antiIdleButton.MouseButton1Click:Connect(function()
+
 
 	antiIdleEnabled = not antiIdleEnabled
 
+
+
 	if antiIdleEnabled then
+
 
 		EnableAntiIdle()
 
+
 		antiIdleButton.Text = "Anti Idle : ON"
-		antiIdleButton.BackgroundColor3 = Color3.fromRGB(50,170,50)
+
+		antiIdleButton.BackgroundColor3 =
+			Color3.fromRGB(50,170,50)
+
+
 
 	else
 
+
 		antiIdleButton.Text = "Anti Idle : OFF"
-		antiIdleButton.BackgroundColor3 = Color3.fromRGB(170,50,50)
+
+		antiIdleButton.BackgroundColor3 =
+			Color3.fromRGB(170,50,50)
+
+
 
 	end
+
+
+end)
+
+
+
+
+mutationESPButton.MouseButton1Click:Connect(function()
+
+
+	mutationESPEnabled = not mutationESPEnabled
+
+
+
+	if mutationESPEnabled then
+
+
+		mutationESPButton.Text = "Mutation ESP : ON"
+
+		mutationESPButton.BackgroundColor3 =
+			Color3.fromRGB(50,170,50)
+
+
+
+		task.spawn(
+			MutationLoop
+		)
+
+
+
+	else
+
+
+		mutationESPButton.Text = "Mutation ESP : OFF"
+
+		mutationESPButton.BackgroundColor3 =
+			Color3.fromRGB(170,50,50)
+
+
+
+		clearMutationESP()
+
+
+
+	end
+
 
 end)
