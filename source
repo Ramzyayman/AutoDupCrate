@@ -1,34 +1,34 @@
-local targetPosition = Vector3.new(3278.989, 502.870, 1158.379)
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local plot = workspace.Plots:WaitForChild(LocalPlayer.Name .. " Plot")
+local duplicator = plot:WaitForChild("Machines"):WaitForChild("Duplicator")
+local cratesFolder = duplicator:WaitForChild("CratesFolder")
+
+local triggered = {}
+
+local function triggerPrompt(prompt)
+	if triggered[prompt] then
+		return
+	end
+
+	triggered[prompt] = true
+
+	prompt:InputHoldBegin()
+	task.wait(0.15)
+	prompt:InputHoldEnd()
+
+	task.delay(1, function()
+		triggered[prompt] = nil
+	end)
+end
 
 while true do
-	task.wait(1)
-
-	local found = false
-
-	for _, prompt in ipairs(workspace:GetDescendants()) do
-		if prompt:IsA("ProximityPrompt") 
-		and prompt.ActionText == "Pickup" then
-
-			local part = prompt.Parent
-
-			if part:IsA("BasePart") then
-				local distance = (part.Position - targetPosition).Magnitude
-
-				if distance < 3 then
-					print("Picking duplicated crate:", prompt:GetFullName())
-
-					prompt:InputHoldBegin()
-					task.wait(0.15)
-					prompt:InputHoldEnd()
-
-					found = true
-					break
-				end
-			end
+	for _, crate in ipairs(cratesFolder:GetDescendants()) do
+		if crate:IsA("ProximityPrompt") and crate.ActionText == "Pickup" then
+			triggerPrompt(crate)
 		end
 	end
 
-	if not found then
-		print("Waiting for duplicated crate...")
-	end
+	task.wait(0.1)
 end
